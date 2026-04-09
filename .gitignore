@@ -4,3 +4,4 @@ logs/
 venv/
 .env
 profiles.yml
+.user.yml
