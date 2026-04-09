@@ -1,0 +1,14 @@
+name: 'dbt_vendas'           # Nome do projeto
+profile: 'dbt_vendas'        # Profile usado (mesmo nome do arquivo profiles.yml)
+
+models:                      # Configurações dos modelos
+  dbt_vendas:                # Nome do projeto (deve corresponder ao 'name')
+    raw:                     # Pasta raw
+      +materialized: table   # Materializado como tabela
+      +schema: raw           # Schema raw
+    staging:                 # Pasta staging
+      +materialized: view    # Materializado como view
+      +schema: staging       # Schema staging
+    olap:                    # Pasta olap
+      +materialized: table   # Materializado como tabela
+      +schema: olap          # Schema olap

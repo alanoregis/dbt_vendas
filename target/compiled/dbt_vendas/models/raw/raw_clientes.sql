@@ -1,0 +1,1 @@
+select * from "venda_db"."oltp"."clientes"

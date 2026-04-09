@@ -1,0 +1,11 @@
+﻿dbt_vendas:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: postgres
+      password: "1234"
+      port: 5432
+      dbname: venda_db
+      schema: public
