@@ -58,7 +58,7 @@ models/
 
 ## 🔄 Etapas do Processo
 
-1.Ingestão de Dados
+1. Ingestão de Dados
 
     Dados provenientes de arquivos CSV/Excel
 
