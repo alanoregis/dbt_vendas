@@ -15,15 +15,23 @@ Transformar dados brutos provenientes de arquivos (CSV/Excel) em um modelo estru
 O fluxo de dados segue a arquitetura clássica de Data Warehouse:
 
 ```
-Arquivos (CSV/Excel)
-        ↓
-     Python (Ingestão)
-        ↓
-   PostgreSQL (RAW)
-        ↓
-     dbt (Transformações)
-        ↓
-  staging → Dimensional → OLAP
+CSV/Excel
+    ↓
+Python (Ingestão)
+    ↓
+PostgreSQL (Camada RAW)
+    ↓
+dbt (Transformações)
+    ↓
+┌─────────────────────────────────────┐
+│  models/raw/     → Fontes brutas    │
+│  models/staging/ → Limpeza e tipos  │
+│  models/olap/    → Dimensões + Fato │
+└─────────────────────────────────────┘
+    ↓
+Data Mart (OLAP)
+    ↓
+Power BI / Dashboards
 ```
 
 ---
@@ -41,47 +49,60 @@ Arquivos (CSV/Excel)
 
 ```
 models/
-│
-├── staging/        # Tratamento e padronização dos dados brutos
-├── intermediate/   # Regras de negócio intermediárias
-├── marts/          # Tabelas finais para análise
-│   ├── fact/       # Tabelas fato
-│   └── dimension/  # Tabelas dimensão
+├── raw/          → Fontes brutas (muitas vezes via source)
+├── staging/      → Limpeza, renomeação, tipos básicos
+└── olap/         → Dimensões e fatos prontos para análise
 ```
 
 ---
 
 ## 🔄 Etapas do Processo
 
-### 1. Ingestão de Dados
+### 1.Ingestão de Dados
 
-* Dados provenientes de arquivos CSV/Excel
-* Processamento inicial com Python
-* Carga no banco PostgreSQL (camada RAW)
+    Dados provenientes de arquivos CSV/Excel
 
----
+    Processamento inicial com Python
 
-### 2. Staging (dbt)
+    Carga no banco PostgreSQL (camada RAW)
 
-* Padronização de nomes
-* Tratamento de tipos de dados
-* Limpeza e organização inicial
+2. Raw Layer (dbt) - models/raw/
 
----
+    Modelos que referenciam diretamente as tabelas carregadas
 
-### 3. Modelagem Dimensional
+    Mapeamento via sources.yml
 
-* Criação de tabelas **fato** e **dimensão**
-* Relacionamentos otimizados para análise
-* Estrutura voltada para BI
+    Primeira camada de abstração no dbt
 
----
+3. Staging Layer (dbt) - models/staging/
 
-### 4. Camada Analítica (OLAP)
+    Padronização de nomes (snake_case, remoção de prefixos)
 
-* Dados prontos para dashboards
-* Otimização para consultas analíticas
-* Base para ferramentas como Power BI
+    Tratamento de tipos de dados (casting)
+
+    Limpeza inicial (COALESCE, TRIM, remoção de nulos)
+
+    Renomeação de colunas para clareza
+
+    Sem joins entre tabelas diferentes (cada stg_* vem de uma única raw_*)
+
+4. Modelagem Dimensional (dbt) - models/olap/
+
+    Criação de tabelas dimensão (dim_clientes, dim_produtos, dim_data, dim_vendedor)
+
+    Criação da tabela fato (fato_pedidos)
+
+    Aplicação de surrogate keys
+
+    Relacionamentos otimizados para análise
+
+5. Camada Analítica / Mart (OLAP)
+
+    Dados prontos para dashboards
+
+    Otimização para consultas analíticas (uso de GROUP BY, agregados, joins controlados)
+
+    Base para ferramentas como Power BI, Tableau ou Metabase
 
 ---
 
