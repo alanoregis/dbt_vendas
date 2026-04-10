@@ -23,7 +23,7 @@ Arquivos (CSV/Excel)
         ↓
      dbt (Transformações)
         ↓
-  Raw → Staging → OLAP
+  staging → Dimensional → OLAP
 ```
 
 ---
