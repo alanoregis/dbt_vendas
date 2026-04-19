@@ -1,177 +1,233 @@
-# 📊 Modelagem de Dados com SQL e dbt
+# 📊 Data Warehouse com dbt, SQL e PostgreSQL
 
-Projeto de engenharia de dados focado na construção de um **Data Warehouse** utilizando **SQL, PostgreSQL e dbt**, aplicando conceitos de modelagem dimensional e boas práticas de transformação de dados.
-
----
-
-## 🚀 Objetivo
-
-Transformar dados brutos provenientes de arquivos (CSV/Excel) em um modelo estruturado e confiável, pronto para análises e dashboards.
+Pipeline completo de engenharia de dados — da ingestão de arquivos brutos até um modelo dimensional pronto para dashboards. Projeto aplicando **dbt**, **PostgreSQL** e **Python**, com arquitetura em camadas Raw → Staging → OLAP.
 
 ---
 
-## 🧱 Arquitetura do Projeto
+## 🎯 Objetivo
 
-O fluxo de dados segue a arquitetura clássica de Data Warehouse:
+Transformar dados brutos (CSV/Excel) em um modelo dimensional confiável e rastreável, utilizando as melhores práticas de transformação com dbt: testes de qualidade, documentação automática e dependências declaradas via `ref()`.
 
-```
-CSV/Excel
-    ↓
-Python (Ingestão)
-    ↓
-PostgreSQL (Camada RAW)
-    ↓
-dbt (Transformações)
-    ↓
-┌─────────────────────────────────────┐
-│  models/raw/     → Fontes brutas    │
-│  models/staging/ → Limpeza e tipos  │
-│  models/olap/    → Dimensões + Fato │
-└─────────────────────────────────────┘
-    ↓
-Data Mart (OLAP)
-    ↓
-Power BI / Dashboards
+---
+
+## 🏗️ Arquitetura
+
+```mermaid
+flowchart TD
+    A[CSV / Excel] -->|Python ingestão| B[(PostgreSQL\ncamada RAW)]
+    B --> C[dbt models/raw\nAbstração das fontes]
+    C --> D[dbt models/staging\nLimpeza e padronização]
+    D --> E[dbt models/olap\nDimensões + Fato]
+    E --> F[Power BI / Dashboards]
 ```
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🔄 Camadas do Pipeline
 
-* 🐍 Python (ingestão de dados)
-* 🐘 PostgreSQL (armazenamento)
-* 🔄 dbt (transformação e modelagem)
-* 💾 SQL (consultas e regras de negócio)
+### 1. Ingestão — Python
 
----
+Leitura de arquivos CSV/Excel e carga no PostgreSQL via Python, populando a camada RAW com os dados brutos sem transformação.
 
-## 📂 Estrutura do Projeto
+### 2. Raw — `models/raw/`
+
+Primeira abstração no dbt. Os modelos referenciam diretamente as tabelas carregadas, mapeadas via `sources.yml`. Nenhuma transformação — só visibilidade e rastreabilidade.
 
 ```
-models/
-├── raw/          → Fontes brutas (muitas vezes via source)
-├── staging/      → Limpeza, renomeação, tipos básicos
-└── olap/         → Dimensões e fatos prontos para análise
+raw_categorias.sql
+raw_clientes.sql
+raw_itens_pedido.sql
+raw_pedidos.sql
+raw_produtos.sql
+raw_vendedores.sql
+sources.yml         ← declaração das fontes
+schema.yml          ← documentação e testes
+```
+
+### 3. Staging — `models/staging/`
+
+Limpeza e padronização. Cada modelo `stg_*` vem de uma única `raw_*` — sem joins entre tabelas diferentes.
+
+- Padronização de nomes (`snake_case`)
+- Casting de tipos de dados
+- `COALESCE`, `TRIM` e remoção de nulos
+- Renomeação de colunas para clareza
+
+```
+stg_clientes.sql
+stg_itens_pedido.sql
+stg_pedidos.sql
+stg_produtos.sql
+stg_vendedores.sql
+schema.yml
+```
+
+### 4. OLAP — `models/olap/`
+
+Modelagem dimensional com surrogate keys, dimensões e tabela fato prontas para análise.
+
+```
+dim_clientes.sql
+dim_data.sql
+dim_produtos.sql
+dim_vendedor.sql
+fato_pedidos.sql
+schemas.yml
 ```
 
 ---
 
-## 🔄 Etapas do Processo
+## 📐 Modelagem — Star Schema
 
-1. Ingestão de Dados
+```mermaid
+erDiagram
+    dim_data ||--o{ fato_pedidos : fk_data
+    dim_clientes ||--o{ fato_pedidos : fk_cliente
+    dim_produtos ||--o{ fato_pedidos : fk_produto
+    dim_vendedor ||--o{ fato_pedidos : fk_vendedor
 
-    Dados provenientes de arquivos CSV/Excel
-
-    Processamento inicial com Python
-
-    Carga no banco PostgreSQL (camada RAW)
-
-2. Raw Layer (dbt) - models/raw/
-
-    Modelos que referenciam diretamente as tabelas carregadas
-
-    Mapeamento via sources.yml
-
-    Primeira camada de abstração no dbt
-
-3. Staging Layer (dbt) - models/staging/
-
-    Padronização de nomes (snake_case, remoção de prefixos)
-
-    Tratamento de tipos de dados (casting)
-
-    Limpeza inicial (COALESCE, TRIM, remoção de nulos)
-
-    Renomeação de colunas para clareza
-
-    Sem joins entre tabelas diferentes (cada stg_* vem de uma única raw_*)
-
-4. Modelagem Dimensional (dbt) - models/olap/
-
-    Criação de tabelas dimensão (dim_clientes, dim_produtos, dim_data, dim_vendedor)
-
-    Criação da tabela fato (fato_pedidos)
-
-    Aplicação de surrogate keys
-
-    Relacionamentos otimizados para análise
-
-5. Camada Analítica / Mart (OLAP)
-
-    Dados prontos para dashboards
-
-    Otimização para consultas analíticas (uso de GROUP BY, agregados, joins controlados)
-
-    Base para ferramentas como Power BI, Tableau ou Metabase
+    fato_pedidos {
+        int sk_pedido PK
+        int fk_cliente
+        int fk_produto
+        int fk_vendedor
+        int fk_data
+        int qt_itens
+        decimal vl_unitario
+        decimal vl_total
+        decimal vl_desconto
+    }
+```
 
 ---
 
-## 📈 Exemplos de Modelagem
+## 🛠️ Stack Tecnológica
 
-* Fato: `fato_pedidos`
-* Dimensões:
+| Categoria | Tecnologia |
+|-----------|-----------|
+| Linguagem | Python |
+| Banco de dados | PostgreSQL |
+| Transformação e modelagem | dbt (dbt-postgres) |
+| Consultas e regras de negócio | SQL |
+| Visualização | Power BI |
+| Versionamento | Git / GitHub |
 
-  * `dim_clientes`
-  * `dim_produtos`
-  * `dim_vendedor`
-  * `dim_data`
+---
+
+## 📂 Estrutura do Repositório
+
+```
+PROJETO-DBT/
+│
+├── dbt_vendas/
+│   ├── models/
+│   │   ├── raw/
+│   │   │   ├── raw_categorias.sql
+│   │   │   ├── raw_clientes.sql
+│   │   │   ├── raw_itens_pedido.sql
+│   │   │   ├── raw_pedidos.sql
+│   │   │   ├── raw_produtos.sql
+│   │   │   ├── raw_vendedores.sql
+│   │   │   ├── sources.yml
+│   │   │   └── schema.yml
+│   │   │
+│   │   ├── staging/
+│   │   │   ├── stg_clientes.sql
+│   │   │   ├── stg_itens_pedido.sql
+│   │   │   ├── stg_pedidos.sql
+│   │   │   ├── stg_produtos.sql
+│   │   │   ├── stg_vendedores.sql
+│   │   │   └── schema.yml
+│   │   │
+│   │   └── olap/
+│   │       ├── dim_clientes.sql
+│   │       ├── dim_data.sql
+│   │       ├── dim_produtos.sql
+│   │       ├── dim_vendedor.sql
+│   │       ├── fato_pedidos.sql
+│   │       └── schemas.yml
+│   │
+│   ├── dbt_project.yml
+│   ├── profiles.yml
+│   └── .gitignore
+│
+└── README.md
+```
+
+---
+
+## 🚀 Como Executar
+
+**Pré-requisitos:** Python 3.10+, PostgreSQL rodando localmente
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/alanoregis/projeto-dbt.git
+cd projeto-dbt
+```
+
+### 2. Instale as dependências
+
+```bash
+pip install dbt-postgres
+```
+
+### 3. Configure a conexão
+
+Edite o arquivo `profiles.yml` com suas credenciais do PostgreSQL.
+
+### 4. Rode as transformações
+
+```bash
+dbt run
+```
+
+### 5. Execute os testes de qualidade
+
+```bash
+dbt test
+```
+
+### 6. Acesse a documentação
+
+```bash
+dbt docs generate
+dbt docs serve
+```
+
+Acesse em: `http://localhost:8080`
 
 ---
 
 ## ✅ Boas Práticas Aplicadas
 
-* Versionamento com Git
-* Organização em camadas (staging → marts)
-* Uso de `ref()` no dbt para dependências
-* Separação entre dados brutos e tratados
-* Estrutura escalável para crescimento do projeto
+- Dependências declaradas via `ref()` — dbt garante a ordem de execução
+- Separação rígida entre camadas: raw não tem transformação, staging não tem joins
+- Testes de qualidade com `schema.yml` (not_null, unique, accepted_values)
+- Documentação automática gerada pelo dbt
+- Surrogate keys nas dimensões para integridade do modelo
+- Estrutura escalável — novas fontes entram sem impactar camadas existentes
 
 ---
 
-## ▶️ Como executar o projeto
+## 💡 Melhorias Futuras
 
-```bash
-# Instalar dependências
-pip install dbt-postgres
-
-# Rodar transformações
-dbt run
-
-# Rodar testes
-dbt test
-
-# Gerar documentação
-dbt docs generate
-dbt docs serve
-```
-
----
-
-## 📊 Documentação
-
-Após rodar:
-
-```bash
-dbt docs serve
-```
-
-Acesse no navegador:
-
-```
-http://localhost:8080
-```
-
----
-
-## 💡 Possíveis melhorias futuras
-
-* Adição de testes de qualidade mais robustos
-* Integração com ferramentas de BI
-* Orquestração com Airflow
-* Pipeline automatizado (CI/CD)
+- Testes de qualidade mais robustos (dbt expectations)
+- Orquestração com Apache Airflow
+- Integração com ferramenta de BI (Power BI, Metabase)
+- Pipeline automatizado com CI/CD (GitHub Actions)
 
 ---
 
 ## 👨‍💻 Autor
 
-Projeto desenvolvido como prática de Engenharia de Dados, com foco em modelagem e transformação utilizando dbt.
+**Alano Regis Milfont** — Engenheiro de Dados Júnior | Analista de Dados
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/alanoregis)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/alanoregis)
+[![Email](https://img.shields.io/badge/Email-EA4335?style=flat&logo=gmail&logoColor=white)](mailto:alano.120.ar@gmail.com)
+
+---
+
+> *Projeto desenvolvido como prática de Engenharia de Dados com foco em modelagem dimensional e transformação com dbt.*
