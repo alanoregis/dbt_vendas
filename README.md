@@ -12,14 +12,7 @@ Transformar dados brutos (CSV/Excel) em um modelo dimensional confiável e rastr
 
 ## 🏗️ Arquitetura
 
-```mermaid
-flowchart TD
-    A[CSV / Excel] -->|Python ingestão| B[(PostgreSQL\ncamada RAW)]
-    B --> C[dbt models/raw\nAbstração das fontes]
-    C --> D[dbt models/staging\nLimpeza e padronização]
-    D --> E[dbt models/olap\nDimensões + Fato]
-    E --> F[Power BI / Dashboards]
-```
+![Arquitetura do Pipeline](docs/imag/Arquitetura.png)
 
 ---
 
