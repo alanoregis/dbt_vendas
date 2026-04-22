@@ -13,7 +13,7 @@ Transformar dados brutos (CSV/Excel) em um modelo dimensional confiável e rastr
 ## 🏗️ Arquitetura
 
 <div align="center">
-  <img src="docs/img/Arquitetura.png" height="400"/>
+  <img src="docs/img/Arquitetura.png" height="600"/>
 </div>
 
 ---
