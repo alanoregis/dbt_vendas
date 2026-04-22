@@ -135,7 +135,7 @@ PROJETO-DBT/
 ```
 
 ---
-## ✅ Resultados
+## 📸 Resultados
 
 <div align="center">
   <img src="docs/img/dbt-test.png" width="700"/>
