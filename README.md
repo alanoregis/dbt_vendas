@@ -74,25 +74,10 @@ schemas.yml
 
 ## 📐 Modelagem — Star Schema
 
-```mermaid
-erDiagram
-    dim_data ||--o{ fato_pedidos : fk_data
-    dim_clientes ||--o{ fato_pedidos : fk_cliente
-    dim_produtos ||--o{ fato_pedidos : fk_produto
-    dim_vendedor ||--o{ fato_pedidos : fk_vendedor
 
-    fato_pedidos {
-        int sk_pedido PK
-        int fk_cliente
-        int fk_produto
-        int fk_vendedor
-        int fk_data
-        int qt_itens
-        decimal vl_unitario
-        decimal vl_total
-        decimal vl_desconto
-    }
-```
+<div align="center">
+  <img src="docs/img/Star-Schema.png" height="800"/>
+</div>
 
 ---
 
