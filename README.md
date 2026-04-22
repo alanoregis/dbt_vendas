@@ -12,7 +12,7 @@ Transformar dados brutos (CSV/Excel) em um modelo dimensional confiável e rastr
 
 ## 🏗️ Arquitetura
 
-![Arquitetura do Pipeline](docs/imag/Arquitetura.png)
+![Arquitetura do Pipeline](docs/img/Arquitetura.png)
 
 ---
 
