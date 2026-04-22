@@ -135,6 +135,17 @@ PROJETO-DBT/
 ```
 
 ---
+## ✅ Resultados
+
+<div align="center">
+  <img src="docs/img/dbt-test.png" width="700"/>
+  <p><em>31 testes de qualidade — PASS=31 WARN=0 ERROR=0</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/img/dbt-lineage.png" width="700"/>
+  <p><em>Lineage graph gerado pelo dbt docs</em></p>
+</div>
 
 ## 🚀 Como Executar
 
